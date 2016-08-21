@@ -1,6 +1,6 @@
 <$PLAN9/src/mkhdr
 
-TARG=Mail
+TARG=Amail
 OFILES=\
 		html.$O\
 		mail.$O\

@@ -181,6 +181,7 @@ Message*	dosingleton(Message*, char*);
 String*		rooted(String*);
 int		plumb(Message*, Ctype*);
 String*		addrecolon(char*);
+String*		addfwdcolon(char*);
 void		exitfs(char*);
 Message*	flushdeleted(Message*);
 
@@ -1949,6 +1950,8 @@ mcmd(Cmd *c, Message *m)
 {
 	char **av;
 	int i, ai;
+	Message *nm;
+	String *subject = nil;
 	String *path;
 
 	if(m == &top){
@@ -1969,6 +1972,15 @@ mcmd(Cmd *c, Message *m)
 		av[ai++] = "message/rfc822";
 	else
 		av[ai++] = "mime";
+
+	for(nm = m; nm != &top; nm = nm->parent){
+		if(*nm->subject){
+			av[ai++] = "-s";
+			subject = addfwdcolon(nm->subject);
+			av[ai++] = s_to_c(subject);;
+			break;
+		}
+	}
 
 	av[ai++] = "-A";
 	path = rooted(extendpath(m->path, "raw"));
@@ -2549,9 +2561,8 @@ rooted(String *s)
 {
 	static char buf[256];
 
-	if(strcmp(root, ".") != 0)
-		return s;
-	snprint(buf, sizeof(buf), "/mail/fs/%s/%s", mbname, s_to_c(s));
+	// Edit by Jacob. Not 100% sure what I am doing here but it seems to work
+	snprint(buf, sizeof(buf), "Mail/%s", s_to_c(s));
 	s_free(s);
 	return s_copy(buf);
 }
@@ -2603,6 +2614,19 @@ addrecolon(char *s)
 
 	if(cistrncmp(s, "re:", 3) != 0){
 		str = s_copy("Re: ");
+		s_append(str, s);
+	} else
+		str = s_copy(s);
+	return str;
+}
+
+String*
+addfwdcolon(char *s)
+{
+	String *str;
+
+	if(cistrncmp(s, "fwd:", 4) != 0){
+		str = s_copy("Fwd: ");
 		s_append(str, s);
 	} else
 		str = s_copy(s);
