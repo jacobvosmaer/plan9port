@@ -105,6 +105,7 @@ static char *lines[] = {
 	"abcdefghijklmnopqrstuvwxyz",
 	"g",
 	"┌┬┐├┼┤└┴┘│─",
+	"[]{}ÉÊÇȚ¶∏",
 	"ὕαλον ϕαγεῖν δύναμαι· τοῦτο οὔ με βλάπτει.",
 	"私はガラスを食べられます。それは私を傷つけません。",
 	"Aš galiu valgyti stiklą ir jis manęs nežeidžia",
