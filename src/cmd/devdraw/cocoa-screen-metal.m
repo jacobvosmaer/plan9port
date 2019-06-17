@@ -67,6 +67,7 @@ static DrawLayer *layer;
 static id<MTLDevice> device;
 static id<MTLCommandQueue> commandQueue;
 static id<MTLTexture> texture;
+static id<MTLFence> fence;
 
 static Memimage *img = NULL;
 
@@ -178,6 +179,8 @@ threadmain(int argc, char **argv)
 	}
 	if(!device)
 		device = MTLCreateSystemDefaultDevice();
+
+	fence = [device newFence];
 
 	commandQueue = [device newCommandQueue];
 
@@ -789,6 +792,7 @@ struct Cursors {
 	LOG(@"display got drawable");
 
 	blit = [cbuf blitCommandEncoder];
+	[blit waitForFence: fence];
 	[blit copyFromTexture:texture
 		sourceSlice:0
 		sourceLevel:0
@@ -798,6 +802,7 @@ struct Cursors {
 		destinationSlice:0
 		destinationLevel:0
 		destinationOrigin:MTLOriginMake(0, 0, 0)];
+	[blit updateFence:fence];
 	[blit endEncoding];
 
 	[cbuf presentDrawable:drawable];
