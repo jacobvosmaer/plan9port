@@ -28,7 +28,7 @@ int	append(File*, Cmd*, long);
 int	pdisplay(File*);
 void	pfilename(File*);
 void	looper(File*, Cmd*, int);
-void	filelooper(Cmd*, int);
+void	filelooper(Window*, Cmd*, int);
 void	linelooper(File*, Cmd*);
 Address	lineaddr(long, Address, int);
 int	filematch(File*, String*);
@@ -584,7 +584,7 @@ X_cmd(Text *t, Cmd *cp)
 {
 	USED(t);
 
-	filelooper(cp, cp->cmdc=='X');
+	filelooper(t->w, cp, cp->cmdc=='X');
 	return TRUE;
 }
 
@@ -978,7 +978,7 @@ alllocker(Window *w, void *v)
 }
 
 void
-filelooper(Cmd *cp, int XY)
+filelooper(Window *origw, Cmd *cp, int XY)
 {
 	int i;
 
@@ -1001,8 +1001,19 @@ filelooper(Cmd *cp, int XY)
 	 */
 	allwindows(alllocker, (void*)1);
 	globalincref = 1;
-	for(i=0; i<loopstruct.nw; i++)
-		cmdexec(&loopstruct.w[i]->body, cp->u.cmd);
+	for(i=0; i<loopstruct.nw; i++) {
+		/*
+		 * If cp hits runpipe, runpipe will winunlock w. But unless w
+		 * is the window the XY originated from, it won't be locked. So lets
+		 * winlock w around cmdexec.
+		 */
+		Window *w = loopstruct.w[i];
+		if(w!=origw)
+			winlock(w, 'M');
+		cmdexec(&w->body, cp->u.cmd);
+		if(w!=origw)
+			winunlock(w);
+	}
 	allwindows(alllocker, (void*)0);
 	globalincref = 0;
 	free(loopstruct.w);
